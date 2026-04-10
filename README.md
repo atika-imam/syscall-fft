@@ -1,25 +1,25 @@
 # syscall-fft
 ### Part 1: Windows Setup (The Host)
 1. Install the Tools
-Download VS Code: Go to code.visualstudio.com and download the Windows installer. Run it and finish the setup.
-
-Install MinGW (The Compiler): * Go to winlibs.com or download the "MinGW-w64" installer.
-Crucial: Once installed, you must add the bin folder to your Environment Variables (Path) so Windows knows where g++ is. (Search "Edit the system environment variables" in your Start menu).
-
-Setup VS Code:
-Open VS Code.
-Press Ctrl+Shift+X, search for "C++", and install the one by Microsoft.
+  Download VS Code: Go to code.visualstudio.com and download the Windows installer. Run it and finish the setup.
+  
+  Install MinGW (The Compiler): * Go to winlibs.com or download the "MinGW-w64" installer.
+  Crucial: Once installed, you must add the bin folder to your Environment Variables (Path) so Windows knows where g++ is. (Search "Edit the system environment variables" in your Start menu).
+  
+  Setup VS Code:
+  Open VS Code.
+  Press Ctrl+Shift+X, search for "C++", and install the one by Microsoft.
 
 2. Test "Hello World"
-Open VS Code, click File > New Text File, and save it as hello.cpp.
-
-Type: #include <iostream> 
-int main() { 
-  cout << "Hello World"; 
-  return 0; 
-}.
-
-Run file, if it prints "Hello World," your Windows is ready.
+  Open VS Code, click File > New Text File, and save it as hello.cpp.
+  
+  Type: #include <iostream> 
+  int main() { 
+    cout << "Hello World"; 
+    return 0; 
+  }.
+  
+  Run file, if it prints "Hello World," your Windows is ready.
 
 ### 3. Run the Final Windows Project
 Create a folder on your Desktop named OS_Project.
