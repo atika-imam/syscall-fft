@@ -1,5 +1,5 @@
 # syscall-fft
-# Part 1: Windows Setup (The Host)
+### Part 1: Windows Setup (The Host)
 1. Install the Tools
 Download VS Code: Go to code.visualstudio.com and download the Windows installer. Run it and finish the setup.
 
@@ -21,7 +21,7 @@ int main() {
 
 Run file, if it prints "Hello World," your Windows is ready.
 
-# 3. Run the Final Windows Project
+### 3. Run the Final Windows Project
 Create a folder on your Desktop named OS_Project.
 Open this folder in VS Code.
 Create a new file named syscall.cpp.
@@ -30,7 +30,7 @@ Paste the Windows Code .
 Run it: In the VS Code terminal.
 The terminal will print: Windows Execution Completed in: 0.XXXX s.
 
-# Part 2: Kali Linux Setup (The VM)
+### Part 2: Kali Linux Setup (The VM)
 1. Open Terminal and Install Compiler
 Start your Kali VM and log in.
 Click the Terminal icon (top left).
