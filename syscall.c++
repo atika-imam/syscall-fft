@@ -11,6 +11,7 @@ using namespace std;
 #define N 1024
 #define PI 3.14159265358979323846
 
+// ---------------- FFT FIXED ----------------
 void run_fft(complex<double>* input, complex<double>* output) {
     for (int k = 0; k < N; k++) {
         complex<double> sum(0, 0);
@@ -25,7 +26,7 @@ void run_fft(complex<double>* input, complex<double>* output) {
 }
 
 int main() {
-    cout << "--- WINDOWS CCP PROJECT  ---\n";
+    cout << "--- WINDOWS CCP PROJECT START ---\n";
 
     LARGE_INTEGER freq, start, end;
     QueryPerformanceFrequency(&freq);
@@ -131,6 +132,8 @@ int main() {
     cout << "CreateProcess Time: "
          << (double)(end.QuadPart - start.QuadPart) / freq.QuadPart
          << " sec\n";
+    
+    cout << "Current PID: " << GetCurrentProcessId() << endl;
 
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -222,6 +225,14 @@ int main() {
         buffer[i] = complex<double>(i, 0);
     }
 
+    SYSTEMTIME st;
+    GetSystemTime(&st);
+
+    cout << "FFT Start Time: "
+         << st.wHour << ":"
+         << st.wMinute << ":"
+         << st.wSecond << endl;
+
     // ---------------- FFT FIXED ----------------
     clock_t fft_start = clock();
 
@@ -266,6 +277,9 @@ int main() {
     cout << "Shared Memory Used\n";
 
     // ---------------- OUTPUT ----------------
+    SetFileAttributes("output.txt", FILE_ATTRIBUTE_NORMAL);
+
+
     hFile = CreateFile(
         "output.txt",
         GENERIC_WRITE,
@@ -301,6 +315,16 @@ int main() {
 
     cout << "Output File Written\n";
 
+    BOOL attrSuccess = SetFileAttributes(
+        "output.txt",
+        FILE_ATTRIBUTE_READONLY
+    );
+
+    if (attrSuccess) {
+        cout << "Read-only attribute applied\n";
+    } else {
+        cout << "SetFileAttributes failed\n";
+    }
     // ---------------- PERMISSIONS ----------------
     cout << "SetFileSecurity (conceptual system call demonstrated)\n";
 
@@ -308,7 +332,14 @@ int main() {
     VirtualFree(buffer, 0, MEM_RELEASE);
     VirtualFree(result, 0, MEM_RELEASE);
 
-    UnmapViewOfFile(pBuf);
+    BOOL unmapSuccess = UnmapViewOfFile(pBuf);
+
+    if (unmapSuccess) {
+        cout << "UnmapViewOfFile successful\n";
+    } else {
+        cout << "UnmapViewOfFile failed\n";
+    }
+
     CloseHandle(hMap);
 
     CloseHandle(hReadPipe);
