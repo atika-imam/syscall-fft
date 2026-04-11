@@ -19,9 +19,9 @@ typedef struct {
     double imag;
 } complex_num;
 
-// ---------------- FFT FIXED ----------------
-void run_fft(complex_num* input, complex_num* output) {
-    for (int k = 0; k < N; k++) {
+// ---------------- FFT ----------------
+void run_fft_segment(complex_num* input, complex_num* output, int start, int end) {
+    for (int k = start; k < end; k++) {
         double sum_real = 0;
         double sum_imag = 0;
 
@@ -37,7 +37,7 @@ void run_fft(complex_num* input, complex_num* output) {
 }
 
 int main() {
-    printf("--- LINUX CCP PROJECT ---\n");
+    printf("--- LINUX CCP PROJECT START ---\n");
 
     struct timespec start, end;
 
@@ -56,16 +56,15 @@ int main() {
     lseek(fd, 0, SEEK_SET);
 
     char readBuffer[100] = {0};
-    ssize_t bytesRead = read(fd, readBuffer, sizeof(readBuffer));
+    read(fd, readBuffer, sizeof(readBuffer));
 
     printf("File Read: %s\n", readBuffer);
-    printf("Bytes Read: %ld\n", bytesRead);
 
     close(fd);
 
     clock_gettime(CLOCK_MONOTONIC, &end);
 
-    printf("open/write/read Time: %f sec\n",
+    printf("File I/O Time: %f sec\n",
            (end.tv_sec - start.tv_sec) +
            (end.tv_nsec - start.tv_nsec) / 1e9);
 
@@ -75,10 +74,13 @@ int main() {
     pid_t pid = fork();
 
     if (pid == 0) {
+        printf("Child PID: %d\n", getpid());
+
         char *args[] = {"/bin/echo", "Process_Started", NULL};
         execv(args[0], args);
         exit(0);
     } else {
+        printf("Parent PID: %d\n", getpid());
         wait(NULL);
     }
 
@@ -110,26 +112,20 @@ int main() {
     close(pipefd[0]);
     close(pipefd[1]);
 
-    // ---------------- MEMORY ----------------
+    // ---------------- MEMORY (mmap) ----------------
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    complex_num* buffer = mmap(
-        NULL,
+    complex_num* buffer = mmap(NULL,
         N * sizeof(complex_num),
         PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANONYMOUS,
-        -1,
-        0
-    );
+        -1, 0);
 
-    complex_num* result = mmap(
-        NULL,
+    complex_num* result = mmap(NULL,
         N * sizeof(complex_num),
         PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANONYMOUS,
-        -1,
-        0
-    );
+        -1, 0);
 
     if (buffer == MAP_FAILED || result == MAP_FAILED) {
         perror("mmap failed");
@@ -142,28 +138,28 @@ int main() {
            (end.tv_sec - start.tv_sec) +
            (end.tv_nsec - start.tv_nsec) / 1e9);
 
-    // Initialize input
+    // ---------------- INIT DATA ----------------
     for (int i = 0; i < N; i++) {
         buffer[i].real = i;
         buffer[i].imag = 0;
     }
 
-    // ---------------- FFT ----------------
-    clock_t fft_start = clock();
+    // ---------------- PARALLEL FFT (IMPORTANT FIX) ----------------
+    pid_t fft_pid = fork();
 
-    run_fft(buffer, result);
-
-    clock_t fft_end = clock();
-
-    printf("FFT Time: %f sec\n",
-           (double)(fft_end - fft_start) / CLOCKS_PER_SEC);
+    if (fft_pid == 0) {
+        printf("FFT Child PID: %d\n", getpid());
+        run_fft_segment(buffer, result, 0, N/2);
+        exit(0);
+    } else {
+        run_fft_segment(buffer, result, N/2, N);
+        wait(NULL);
+    }
 
     // ---------------- SHARED MEMORY ----------------
-    int shmid = shmget(
-        IPC_PRIVATE,
+    int shmid = shmget(IPC_PRIVATE,
         N * sizeof(complex_num),
-        IPC_CREAT | 0666
-    );
+        IPC_CREAT | 0666);
 
     if (shmid < 0) {
         perror("shmget failed");
@@ -180,6 +176,10 @@ int main() {
     memcpy(shm_addr, result, N * sizeof(complex_num));
 
     printf("Shared Memory Used\n");
+
+    // ---------------- CLEAN SHM ----------------
+    shmdt(shm_addr);
+    shmctl(shmid, IPC_RMID, NULL);
 
     // ---------------- OUTPUT ----------------
     fd = open("output.txt", O_CREAT | O_WRONLY | O_TRUNC, 0666);
@@ -200,18 +200,14 @@ int main() {
     printf("Output File Written\n");
 
     // ---------------- PERMISSIONS ----------------
+    chown("output.txt", getuid(), getgid());
     chmod("output.txt", S_IRUSR | S_IWUSR);
 
-    printf("chmod applied\n");
-    printf("chown (conceptual system call demonstrated)\n");
-
-    umask(0022);
+    printf("chown + chmod applied\n");
 
     // ---------------- CLEANUP ----------------
     munmap(buffer, N * sizeof(complex_num));
     munmap(result, N * sizeof(complex_num));
-
-    shmdt(shm_addr);
 
     printf("--- COMPLETED ---\n");
 
