@@ -331,7 +331,7 @@ int main() {
     // ---------------- CLEANUP ----------------
     VirtualFree(buffer, 0, MEM_RELEASE);
     VirtualFree(result, 0, MEM_RELEASE);
-
+    
     BOOL unmapSuccess = UnmapViewOfFile(pBuf);
 
     if (unmapSuccess) {
