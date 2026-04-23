@@ -1,7 +1,7 @@
 /*
  * ================================================================
  *  CT-353 OS CCP — Linux System Call Implementation
- *  UPGRADED: Real Cooley-Tukey FFT + Resource Metrics +
+ *          Real Cooley-Tukey FFT + Resource Metrics +
  *            Fixed Parallelisation + All 15 Syscalls
  *
  *  System Calls (15):
